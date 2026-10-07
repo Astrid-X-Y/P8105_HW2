@@ -9,6 +9,7 @@ editor_options:
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(readxl)
 ```
 
 # Question 1
@@ -98,4 +99,61 @@ A_train_ada
 ```
 60 distinct stations serve the A train. Of those stations that serve the A train, only 17 are ADA compliant.
 
+
+# Question 2
+```{r}
+trash =
+  read_excel("data/202610 Trash Wheel Collection Data.xlsx",
+    sheet = "Mr. Trash Wheel",
+    range = "A2:N742"
+  )
+trash
+
+trash =
+  trash |>
+  janitor::clean_names()
+names(trash)
+
+trash =
+  trash |>
+  mutate(
+    sports_balls = round(sports_balls),
+    sports_balls = as.integer(sports_balls)
+  )
+trash
+
+str(trash)
+```
+
+```{r}
+professor =
+  read_excel("data/202610 Trash Wheel Collection Data.xlsx",
+    sheet = "Professor Trash Wheel",
+    range = "A2:M139"
+  )
+professor
+
+professor =
+  professor |>
+  janitor::clean_names()
+names(professor)
+
+str(professor)
+```
+
+```{r}
+gwynnda =
+  read_excel("data/202610 Trash Wheel Collection Data.xlsx",
+    sheet = "Gwynnda the Good Wheel of the W",
+    range = "A2:L394"
+  )
+gwynnda
+
+gwynnda =
+  gwynnda |>
+  janitor::clean_names()
+names(gwynnda)
+
+str(gwynnda)
+```
 
