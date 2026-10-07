@@ -3,8 +3,99 @@ title: "P8105 Homework 2"
 author: "Astrid Xu"
 date: "2026-10-06"
 output: github_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 library(tidyverse)
 ```
+
+# Question 1
+```{r}
+subway =
+  read_csv("data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") |>
+  janitor::clean_names() |>
+  select(
+    line, station_name, station_latitude, station_longitude,
+    route1:route11,
+    entry, vending, entrance_type, ada)
+subway
+
+subway =
+  subway |>
+  mutate(
+    entry = ifelse(entry == "YES", TRUE, FALSE))
+subway
+
+# Could also use case_match
+# mutate(
+#  entry = case_match(
+#    entry,
+#    "YES" ~ TRUE,
+#    "NO" ~ FALSE
+# ))
+```
+After cleaning, there are 1868 observations and 19 variables in the dataset. The dataset contains information about subway lines, station names, station locations (latitude and longitude), routes served, whether entrances allow entry, vending availability, entrance types, and ADA compliance. For the data cleaning steps, I first imported the dataset using read_csv() and cleaned all variable names using clean_names(). The original dataset contained 32 variables in total, so I used select() to retain only the required variables and saved the cleaned dataset as subway. I then checked the dataset to make sure that it satisfied the requirements. Next I used mutate() to modify the existing entry variable. I am more familiar with ifelse(), it means if the observation equals to YES, then convert it to TURE. If else other than YES, then convert it to FALSE. I viewed the subway dataset again to check the result. The resulting dataset is not tidy because route information is stored across multiple variables (route1 through route11) instead of having route number and route name as distinct variables.
+
+```{r}
+subway |>
+  distinct(line, station_name)
+```
+There are 465 distinct stations.
+
+```{r}
+subway |>
+  filter(ada == TRUE) |>
+  count(line, station_name)
+```
+Only 84 stations are ADA compliant.
+
+```{r}
+no_vending_entry =
+  subway |>
+  filter(vending == "NO", entry == TRUE)
+
+no_vending =
+  subway |>
+  filter(vending == "NO")
+
+nrow(no_vending_entry) / nrow(no_vending)
+```
+The proportion of station entrances / exits without vending allow entrance is 0.3770.
+
+```{r}
+# Reformat can't be proceeded, cuz the variable type of routes doesn't match. So fix the variable types first
+str(subway)
+subway =
+  subway |>
+  mutate(
+    route8 = as.character(route8),
+    route9 = as.character(route9),
+    route10 = as.character(route10),
+    route11 = as.character(route11)
+  )
+str(subway)
+
+subway_reform =
+  subway |>
+  pivot_longer(route1:route11,
+    names_to = "route_number",
+    values_to = "route_name")
+subway_reform
+
+A_train =
+  subway_reform |>
+  filter(route_name == "A") |>
+  distinct(line, station_name)
+A_train
+
+A_train_ada =
+  subway_reform |>
+  filter(route_name == "A", ada == TRUE) |>
+  distinct(line, station_name)
+A_train_ada
+```
+60 distinct stations serve the A train. Of those stations that serve the A train, only 17 are ADA compliant.
+
+
