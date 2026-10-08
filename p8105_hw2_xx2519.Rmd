@@ -307,3 +307,69 @@ female_carrier =
 nrow(female_carrier) / nrow(female)
 ```
 Among female participants, 30% were APOE4 carriers.
+
+```{r}
+amyloid =
+  read_csv(
+    "data/mci_amyloid.csv",
+    skip = 1
+  )
+amyloid
+
+amyloid =
+  amyloid |>
+  janitor::clean_names()
+names(amyloid)
+
+str(amyloid)
+
+amyloid |>
+  filter(is.na(as.numeric(baseline)))
+
+amyloid =
+  amyloid |>
+  mutate(
+    baseline = as.numeric(baseline),
+    time_2 = as.numeric(time_2),
+    time_4 = as.numeric(time_4),
+    time_6 = as.numeric(time_6),
+    time_8 = as.numeric(time_8)
+  )
+amyloid
+
+str(amyloid)
+
+amyloid =
+  amyloid |>
+  pivot_longer(
+    baseline:time_8,
+    names_to = "time",
+    values_to = "amyloid"
+  )
+amyloid
+```
+After importing the data, I noticed that the rows and variable names had the same issue as the baseline dataset. So I again used skip = 1 in read_csv() to skip the first row and use the second row as the variable names. After cleaning the variable names, I noticed that the biomarker values which should be numeric were recognized as character variables. I suspected that this was caused by some non-numeric values in these columns. I used is.na() with numeric conversion to identify values that could not be converted to numbers and found that missing values were recorded in two different ways, "NA" and "Na". Since both represented missing values, I directly converted all biomarker variables to numeric values, which converted these values to NA without affecting the available measurements. Then I used pivot_longer() to separate the five measurement times for each participant into individual observations. The original dataset contained 487 participants and 6 variables, with five amyloid biomarker measurements stored in separate columns for baseline and Times 2, 4, 6, and 8. After reformatting, the dataset contains 2,435 observations and 3 variables: participant ID, measurement time, and amyloid biomarker value. Each row now represents one participant at one measurement time.
+
+```{r}
+amyloid =
+  amyloid |>
+  rename(id = study_id)
+
+mci =
+  baseline |>
+  inner_join(amyloid, by = "id")
+mci
+
+mci |>
+  distinct(id) |>
+  nrow()
+```
+I used an inner join to merge the two datasets by participant ID. This matches observations with the same participant ID across the two datasets, while participants who are not present in both datasets are excluded. So the resulting dataset contains only participants who have information in both the baseline and amyloid datasets. The final merged dataset contains 2,355 observations and 8 variables, representing 471 unique participants. Each participant has five observations corresponding to the five amyloid measurement times.
+
+```{r}
+write_csv(
+  mci,
+  "data/mci_merged.csv"
+)
+```
+
