@@ -227,3 +227,83 @@ gwynnda_june_total |>
   )
 ```
 The total number of cigarette butts collected by Gwynnda in June 2022 was 18,120.
+
+# Question 3
+```{r}
+baseline =
+  read_csv(
+    "data/MCI_baseline.csv",
+    skip = 1
+  )
+baseline
+
+baseline =
+  baseline |>
+  janitor::clean_names()
+names(baseline)
+
+baseline =
+  baseline |>
+  mutate(
+    sex = case_match(
+      sex,
+      1 ~ "Male",
+      0 ~ "Female"
+    ),
+    apoe4 = case_match(
+      apoe4,
+      1 ~ "Carrier",
+      0 ~ "Non-carrier"
+    )
+  )
+baseline
+
+baseline =
+  baseline |>
+  mutate(
+    age_at_onset = na_if(age_at_onset, "."),
+    age_at_onset = as.numeric(age_at_onset)
+  )
+baseline
+```
+After importing the dataset using read_csv(), I noticed that the first row of the table did not contain the variable names I needed, but instead contained descriptions of the variables. So to make R skip the first row and recognize the second row as the variable names, I added the skip = 1 argument when using read_csv(). Then based on the codebook, I converted sex and APOE4 carrier status into their corresponding categorical variables and converted missing values to NA. To remove participants who did not meet the stated inclusion criteria (i.e., no MCI at baseline), I first used filter() to identify participants who had already developed MCI by the time they entered the study. After checking these participants individually, I used filter() to retain only participants whose current age was less than their age at MCI onset or who did not develop MCI during the follow-up period. The original dataset has 483 participants, resulting dataset contains 479 participants and 6 variables, including participant ID, baseline age, sex, education, APOE4 carrier status, and age at MCI onset.
+
+```{r}
+baseline |>
+  filter(age_at_onset <= current_age)
+
+baseline =
+  baseline |>
+  filter(is.na(age_at_onset) | age_at_onset > current_age)
+baseline
+
+developed =
+  baseline |>
+  filter(!is.na(age_at_onset))
+nrow(developed)
+```
+After excluding, 479 participants were recruited into the study. Among them, 93 developed MCI during the follow-up period.
+
+```{r}
+baseline |>
+  summarize(
+    average_baseline_age = mean(current_age)
+  )
+```
+The average baseline age was 65.0 years.
+
+```{r}
+female =
+  baseline |>
+  filter(sex == "Female")
+
+female_carrier =
+  baseline |>
+  filter(
+    sex == "Female",
+    apoe4 == "Carrier"
+  )
+
+nrow(female_carrier) / nrow(female)
+```
+Among female participants, 30% were APOE4 carriers.
