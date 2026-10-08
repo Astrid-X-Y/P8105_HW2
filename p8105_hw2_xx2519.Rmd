@@ -157,3 +157,73 @@ names(gwynnda)
 str(gwynnda)
 ```
 
+```{r}
+trash =
+  trash |>
+  mutate(
+    trash_wheel = "Mr. Trash Wheel"
+  )
+
+professor =
+  professor |>
+  mutate(
+    trash_wheel = "Professor Trash Wheel"
+  )
+
+gwynnda =
+  gwynnda |>
+  mutate(
+    trash_wheel = "Gwynnda"
+  )
+
+# Combination can't be proceeded, cuz year and plastic_bottles have two different variable types (chr&dbl), so need to fix them first
+trash =
+  trash |>
+  mutate(
+    year = as.numeric(year)
+  )
+
+professor |>
+  filter(plastic_bottles == "dive")
+
+professor =
+  professor |>
+  mutate(
+    plastic_bottles = ifelse(plastic_bottles == "dive", NA, plastic_bottles),
+    plastic_bottles = as.numeric(plastic_bottles)
+  )
+professor
+
+trash_combined =
+  bind_rows(trash, professor, gwynnda)
+trash_combined
+```
+The merged dataset contains 1,269 observations and 15 variables. It tells key information including the name of the garbage truck, the trash can number, the month, year, and date of collection, as well as the weight and volume of the collected trash. The dataset also provides the specific types of trash collected, such as plastic bottles, cigarette butts, plastic bags, and wrapping paper.
+
+```{r}
+professor_total =
+  trash_combined |>
+  filter(trash_wheel == "Professor Trash Wheel")
+
+professor_total |>
+  summarize(
+    total_weight = sum(weight_tons)
+  )
+```
+The total weight of trash collected by Professor Trash Wheel was 295 tons.
+
+```{r}
+gwynnda_june_total =
+  trash_combined |>
+  filter(
+    trash_wheel == "Gwynnda",
+    year == 2022,
+    month == "June"
+  )
+
+gwynnda_june_total |>
+  summarize(
+    total_cigarette_butts = sum(cigarette_butts)
+  )
+```
+The total number of cigarette butts collected by Gwynnda in June 2022 was 18,120.
